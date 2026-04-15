@@ -1,5 +1,7 @@
 """Tests for health, readiness, and root endpoints."""
 
+from unittest.mock import AsyncMock
+
 import pytest
 
 
@@ -20,6 +22,28 @@ async def test_ready(client):
     data = resp.json()
     assert data["status"] == "ok"
     assert data["redis"] == "connected"
+
+
+@pytest.mark.asyncio
+async def test_ready_redis_disconnected(app, client):
+    """Readiness should report disconnected when Redis ping fails."""
+    failing_redis = AsyncMock()
+    failing_redis.ping.side_effect = ConnectionError("redis down")
+    app.state.redis = failing_redis
+
+    resp = await client.get("/ready")
+    assert resp.status_code == 200
+    assert resp.json()["redis"] == "disconnected"
+
+
+@pytest.mark.asyncio
+async def test_ready_redis_not_configured(app, client):
+    """Readiness should report not_configured when Redis is None."""
+    app.state.redis = None
+
+    resp = await client.get("/ready")
+    assert resp.status_code == 200
+    assert resp.json()["redis"] == "not_configured"
 
 
 @pytest.mark.asyncio

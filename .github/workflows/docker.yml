@@ -6,8 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  # CHANGEME: Replace with your org/repo name
-  IMAGE_NAME: CHANGEME/kyte-python-api-template
+  IMAGE_NAME: kyteapp/kyte-python-api-template
 
 jobs:
   build-and-push:

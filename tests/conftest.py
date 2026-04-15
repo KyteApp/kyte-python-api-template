@@ -10,7 +10,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 # Ensure settings resolve before importing the app
-os.environ.setdefault("API_BEARER_TOKEN", "test-token-123")
+os.environ["API_BEARER_TOKEN"] = "test-token-123"
 os.environ.setdefault("REDIS_URL", "")
 
 
@@ -23,7 +23,10 @@ def fake_redis():
 @pytest.fixture()
 def app(fake_redis):
     """Create a fresh FastAPI app with Redis overridden to fakeredis."""
-    # Import inside fixture so env vars are already set
+    # Clear settings cache so env vars are picked up
+    from app.config import get_settings
+    get_settings.cache_clear()
+
     from app.main import create_app
 
     application = create_app()

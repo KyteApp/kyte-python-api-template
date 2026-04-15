@@ -1,5 +1,7 @@
 """Application configuration via Pydantic Settings."""
 
+from functools import lru_cache
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -44,5 +46,20 @@ class Settings(BaseSettings):
         return bool(self.redis_url)
 
 
-# Singleton consumed throughout the app via `from app.config import settings`.
-settings = Settings()
+@lru_cache
+def get_settings() -> Settings:
+    """Lazy singleton — first call creates, subsequent calls reuse."""
+    return Settings()
+
+
+class _SettingsProxy:
+    """Proxy that delegates to get_settings() lazily.
+
+    Usage: ``from app.config import settings``
+    Settings are loaded on first attribute access, not at import time.
+    """
+    def __getattr__(self, name: str):
+        return getattr(get_settings(), name)
+
+
+settings = _SettingsProxy()
